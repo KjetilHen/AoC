@@ -43,12 +43,13 @@ function processLines(input) {
     let copiesOfCards = [];
     let index = 0;
     while (index < lines.length) {
-        console.log("🚀 ~ file: day4_2.js:46 ~ processLines ~ index:", index);
         const line = lines[index];
         const lineSplitted = line.trim().split(': ')[1].trim().split('|'); // results in array with on index 0 winning number, index 1 your numbers
-        const winningNumbers = lineSplitted[0].trim().match(/\d+/g);
-        const yourNumbers = lineSplitted[1].trim().match(/\d+/g)
+        const winningNumbers = lineSplitted[0].trim().match(/\d+/g); // transforms string of numbers to array of numbers
+        const yourNumbers = lineSplitted[1].trim().match(/\d+/g); // transforms string of numbers to array of numbers
         const numberOfDuplicates = getNumberOfDuplicates(winningNumbers, yourNumbers);
+        // copies only contains a subset from the current index + 1 to numberOfDuplicates + index + 1 inside a card
+        // consisting only the number of the card: Card 3: ... -> results in 3
         const copies = lines.slice(index + 1, numberOfDuplicates + index + 1).map((line) => {
             return line.match(/\d+/)[0]; // return only the cardNumber
         });
@@ -59,12 +60,12 @@ function processLines(input) {
 }
 
 function getNumberOfDuplicates(array1, array2) {
-    // the number appears in both array the number match thus return it
+    // returns the total number of appearances. if it appears in both it's a match
     return array1.filter((number) => array2.includes(number)).length;
 }
 
 function addCopies(line, copies, index, copiesOfCards) {
-    copiesOfCards.push(line.match(/\d+/)[0]);
+    copiesOfCards.push(line.match(/\d+/)[0]); // return only the cardNumber
     const numberOfCardsInCopies = getNumberOfCardInCopies(copiesOfCards, index);
     for (let j = 0; j < numberOfCardsInCopies; j++) {
         copiesOfCards.push(...copies);
@@ -74,6 +75,7 @@ function addCopies(line, copies, index, copiesOfCards) {
 function getNumberOfCardInCopies(copiesOfCards, index) {
     let matches = 0;
     for (let j = 0; j < copiesOfCards.length; j++) {
+        // if number in copiesOfCards matches the given index + 1,  increase matches by 1
         if (+copiesOfCards[j] === index + 1) matches++
     }
     return matches;
