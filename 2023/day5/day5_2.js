@@ -43,6 +43,7 @@ function execute(input) {
     const { seedRanges, maps}= getSeedsAndMap(input);
     const rangePairs = toRangPairs(seedRanges);
     let currentSmallest;
+    let cycles = 0;
     for (let i = 0; i < rangePairs.length; i++) {
         for (let j = 0; j < rangePairs[i][1]; j++) {
             const temp = getSmallestNumber(maps, j + rangePairs[i][0]);
@@ -50,9 +51,11 @@ function execute(input) {
             if (temp < currentSmallest ) {
                 currentSmallest = temp;
             }
+            cycles++
         }
     }
-    console.info(currentSmallest);
+    console.info("Number of Cycles: ", cycles);
+    console.info("SmallestNumber: ", currentSmallest);
 }
 
 function mapToObject(map) {
