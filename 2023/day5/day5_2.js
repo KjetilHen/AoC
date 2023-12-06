@@ -27,8 +27,6 @@ function getSeedsAndMap(input) {
     for (let i = 1; i < toArray.length; i++) {
         const mappedToObject = mapToObject(toArray[i]);
         const destinations = mapToSourceToDestination(mappedToObject);
-        destinations.sort((a, b) => a.startIndexSource - b.startIndexSource)
-        console.log(destinations);
         maps.push(destinations);
     }
     return {
@@ -45,7 +43,6 @@ function execute(input) {
     const { seedRanges, maps}= getSeedsAndMap(input);
     const rangePairs = toRangPairs(seedRanges);
     let currentSmallest;
-    let cycles = 0;
     for (let i = 0; i < rangePairs.length; i++) {
         for (let j = 0; j < rangePairs[i][1]; j++) {
             const temp = getSmallestNumber(maps, j + rangePairs[i][0]);
@@ -55,7 +52,7 @@ function execute(input) {
             }
         }
     }
-    console.log(currentSmallest);
+    console.info(currentSmallest);
 }
 
 function mapToObject(map) {
@@ -94,10 +91,11 @@ function getSmallestNumber(maps, seed) {
 function toLocation(seedLocation, map, mapIndex) {
     const copyOfLocation = [...seedLocation];
     for (let i = 0; i < map.length; i++) {
-        if (i = 0 && copyOfLocation[mapIndex] < map[i].startIndexSource || copyOfLocation[mapIndex] > map[i].endIndexSource) continue
-        const diff = map[i].endIndexSource - copyOfLocation[mapIndex];
-        seedLocation.push(map[i].endIndexDestination - diff);
-        break;
+        const loc = map[i];
+        if (copyOfLocation[mapIndex] >= loc.startIndexSource && copyOfLocation[mapIndex] <= loc.endIndexSource) {
+            seedLocation.push(loc.startIndexDestination +  (copyOfLocation[mapIndex] - loc.startIndexSource));
+            continue;
+        }
     }
     if (!seedLocation[mapIndex+1]) seedLocation.push(copyOfLocation[mapIndex]);
     return seedLocation;
