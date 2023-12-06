@@ -109,4 +109,6 @@ function toRangPairs(seedRanges) {
     return rangePairs;
 }
 
+console.time('StartTimer')
 execute(test);
+console.timeEnd('StartTimer');
