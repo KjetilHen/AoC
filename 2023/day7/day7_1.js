@@ -59,10 +59,10 @@ const fs = require('fs');
 const test = fs.readFileSync('data/day7/test_1.txt').toString();
 const input = fs.readFileSync('data/day7/input.txt').toString();
 
-const cardValuesObject = [["A", 14], ["K", 13], ["Q", 12], ["J", 10], ["T", 10], ["9", 9], ["8", 8], ["7", 7], ["6", 6], ["5", 5], ["4", 4], ["3", 3], ["2", 2]];
+const cardValues = {"A": 14, "K": 13, "Q": 12, "J": 11, "T": 10, "9": 9,"8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2};
 
 function execute(input) {
-    const handBids = input.split("\r\n").map((handBid) =>  {
+    let handBids = input.split("\r\n").map((handBid) =>  {
             const [hand, bid] = handBid.split(" ");
             return {
             hand,
@@ -70,84 +70,86 @@ function execute(input) {
         };
     });
 
-    handBids.sort((a, b) => { 
-        const handA = a.hand;
-        const handB = b.hand;
-        console.warn("🚀 ~ file: day7_1.js:78 ~ handBids.sort ~ getHandValue(handA), getHandValue(handB):", getHandValue(handA), getHandValue(handB));
-        if (getHandValue(handA) > getHandValue(handB)) return 1;
-        if (getHandValue(handA) < getHandValue(handB)) return -1;
-        return highestCard(handA, handB);
+    handBids = handBids.map((object) => {
+        object
+        return {
+            handValueBasedOfType: getHandValue(object.hand),
+            ...object,
+        }
     });
-    console.log(handBids);
+    handBids.sort((a, b) => {
+        if (a.handValueBasedOfType > b.handValueBasedOfType) return 1;
+        if (a.handValueBasedOfType < b.handValueBasedOfType) return -1;
+        return getHighestHandBasedOfCardValue(a, b);
+    });
+    const totalWinnings = handBids.reduce((acc, current, index) => (acc += Number(current.bid) * (index + 1)), 0);
+    console.log(totalWinnings);
 }
 
 function getHandValue(hand) {
-    cardValuesObject.forEach((key1, index) => {
-        if(fiveOfKind(hand, key1)) {
-            return 7
-        } else if(fourOfKind(hand, key1)) {
-            return 6
-        } else if(atLeastThree(hand, key1)) {
-            const copy = [...cardValuesObject];
-            copy.splice(index, 1);
-            copy.forEach((key2) => {
-                if(fullHouse(hand, key2)) {
-                    return 5
-                } else {
-                    return 4
-                }
-            });
-        } else if(atLeastAPair(hand, key1)) {
-            const copy = [...cardValuesObject];
-            copy.splice(index, 1);
-            copy.forEach((key3) => {
-                if(twoPair(hand, key3)) {
-                    return 3
-                } 
-                if (onePair(hand, key3)) {
-                    return 2
-                }
-            });
+    let handSorted = hand.split('');
+    handSorted.sort((a, b) => a - b);
+    handSorted = handSorted.join('');
+
+    const valueAppearances = Object.keys(cardValues).map((cardValue) =>  {
+        const matchesFound =
+        handSorted.match(new RegExp(`${cardValue}`, 'g'));
+        const numberOfMatches = matchesFound ? matchesFound.length : 0;
+        return {
+            cardValue,
+            numberOfMatches
         }
     });
-    return 1;
+    if(fiveOfKind(valueAppearances)) {
+        // console.log("🚀 ~ file: day7_1.js:125 ~ fiveOfKind");
+        return 6}
+    else if(fourOfKind(valueAppearances)) {
+        // console.log("🚀 ~ file: day7_1.js:116 ~ fourOfKind");
+        return 5}
+    else if(fullHouse(valueAppearances)) {
+        // console.log("🚀 ~ file: day7_1.js:119 ~ fullHouse");
+        return 4}
+    else if(threeOfKind(valueAppearances)) {
+        // console.log("🚀 ~ file: day7_1.js:124 ~ threeOfKind");
+        return 3}
+    else if(twoPair(valueAppearances)) {
+        // console.log("🚀 ~ file: day7_1.js:128 ~ twoPair");
+        return 2}
+    else if(onePair(valueAppearances)) {
+        // console.log("🚀 ~ file: day7_1.js:132 ~ onePair");
+        return 1}
+    else {
+        // console.log("🚀 ~ file: day7_1.js:115 ~ highestCard");
+        return 0 }
+}
+
+function fiveOfKind(valueAppearances) {
+    return valueAppearances.find((value) => value.numberOfMatches === 5);
+}
+function fourOfKind(valueAppearances) {
+    return valueAppearances.find((value) => value.numberOfMatches === 4);
+}
+function fullHouse(valueAppearances) {
+    return valueAppearances.find((value) => value.numberOfMatches === 3) && valueAppearances.find((value) => value.numberOfMatches === 2)
+}
+function threeOfKind(valueAppearances) {
+    return valueAppearances.find((value) => value.numberOfMatches === 3) && valueAppearances.find((value) => value.numberOfMatches === 1)
+}
+function twoPair(valueAppearances) {
+    return valueAppearances.filter((value) => value.numberOfMatches === 2).length === 2;
+}
+function onePair(valueAppearances) {
+    return valueAppearances.find((value) => value.numberOfMatches === 2) && valueAppearances.find((value) => value.numberOfMatches === 1);
 }
 
 
-function fiveOfKind(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 5
-}
-function fourOfKind(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 4
-}
-function fullHouse(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 2
-}
-function threeOfKind(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 1
-}
-function twoPair(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 2
-}
-function onePair(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 1;
-}
-
-function atLeastAPair(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 2
-}
-
-function atLeastThree(hand, key) {
-    return hand.match(new RegExp(`${key}`, 'g')) && hand.match(new RegExp(`${key}`, 'g')).length === 3
-}
-
-function highestCard(handA, handB) {
-    const handASplitted = handA.split("");
-    const handBSplitted = handB.split("");
+function getHighestHandBasedOfCardValue(handBidA, handBidB) {
+    const handASplitted = handBidA.hand.split("");
+    const handBSplitted = handBidB.hand.split("");
     for (let index = 0; index < handASplitted.length; index++) {
-        if (cardValuesObject[handASplitted[index]] === cardValuesObject[handBSplitted[index]]) continue;
-        if (cardValuesObject[handASplitted[index]] < cardValuesObject[handBSplitted[index]]) {return 1}
-        if (cardValuesObject[handASplitted[index]] > cardValuesObject[handBSplitted[index]]) {return -1}
+        if (cardValues[handASplitted[index]] === cardValues[handBSplitted[index]]) continue;
+        if (cardValues[handASplitted[index]] < cardValues[handBSplitted[index]]) {return -1}
+        if (cardValues[handASplitted[index]] > cardValues[handBSplitted[index]]) {return 1}
     }
 }
 
