@@ -20,98 +20,71 @@ const test = fs.readFileSync('data/day5/test_1.txt').toString();
 // const test_2 = fs.readFileSync('data/day4/test_2.txt');
 const input = fs.readFileSync('data/day5/input.txt').toString();
 
-function getSeedsAndMap(input) {
-    const toArray = input.trim().split('\r\n\r\n');
-    const seedRanges = getSeeds(toArray[0]);
-    const maps = [];
-    for (let i = 1; i < toArray.length; i++) {
-        const mappedToObject = mapToObject(toArray[i]);
-        const destinations = mapToSourceToDestination(mappedToObject);
-        maps.push(destinations);
-    }
-    return {
-        seedRanges,
-        maps
-    }
-}
-
-function getSeeds(seedsAsString) {
-    return seeds = seedsAsString.match(/\d+/g).map((string) => +string);
-}
 
 function execute(input) {
-    const { seedRanges, maps}= getSeedsAndMap(input);
-    const rangePairs = toRangPairs(seedRanges);
-    let currentSmallest;
-    let cycles = 0;
-    for (let i = 0; i < rangePairs.length; i++) {
-        for (let j = 0; j < rangePairs[i][1]; j++) {
-            const temp = getSmallestNumber(maps, j + rangePairs[i][0]);
-            if (!currentSmallest) currentSmallest = temp;
-            if (temp < currentSmallest ) {
-                currentSmallest = temp;
+    const [ seeds, ...maps ] = input.trim().split('\r\n\r\n');
+    console.log("🚀 ~ file: day5_2.js:28 ~ execute ~ getSeedRanges(seeds)):", getSeedRanges(seeds));
+    getLocation(maps.map(parseMapToNumbers), getSeedRanges(seeds));
+}
+
+function getSeedRanges(seedsAsString) {
+    return seedsAsString.match(/\d+ \d+/g).map((seed) => {
+        const [start, length] = seed.split(' ');
+        return [Number(start), Number(start) + Number(length) -1]
+    });
+}
+
+function parseMapToNumbers(map) {
+    const preparedMap = map.split("\r\n");
+    preparedMap.shift(); // remove title of map
+    const mappedToOnlyNumbers = preparedMap.map((item) => (item.match(/\d+/g).map(Number)));
+    mappedToOnlyNumbers.sort((a, b) => (a[1] - b[1]));
+    return mappedToOnlyNumbers;
+}
+
+function getLocation(maps, seeds) {
+    let index = 1;
+    for (const map of maps) {
+        seeds = getNewDestinations(map, seeds);
+        console.log(index, seeds);
+        index++;
+    }seeds.sort((a,b) => a[0] - b[0])
+    // return seeds;
+}
+
+function getNewDestinations(map, sources) {
+    console.log("🚀 ~ file: day5_2.js:53 ~ getNewDestinations ~ map, sources:", sources)
+    while (sources.length > 0) {
+
+        const [sStart, sEnd] = sources.pop();
+        for (let i = 0; i < map.length; i++) {
+            const [mDest, mStart, mLength] = map[i];
+            console.log("🚀 ~ file: day5_2.js:58 ~ getNewDestinations ~ lastRange:", [sStart, sEnd])
+            // console.log("🚀 ~ file: day5_2.js:60 ~ getNewDestinations ~ mRange:", [mDest, mStart, mLength],"\n")
+            const startOverlap = Math.max(sStart, mStart);
+            // console.log("🚀 ~ file: day5_2.js:60 ~ getNewDestinations ~ startOverlap:", startOverlap)
+            const endOverlap = Math.min(sEnd, mStart + mLength -1);
+            // console.log("🚀 ~ file: day5_2.js:62 ~ getNewDestinations ~ endOverlap:", endOverlap)
+            if (startOverlap < endOverlap) {
+                newRanges.push([startOverlap - mStart + mDest, endOverlap - mStart + mDest])
+                console.log("🚀 ~ file: day5_2.js:72 ~ getNewDestinations ~ startOverlap > sStart:", startOverlap > sStart)
+                console.log("🚀 ~ file: day5_2.js:76 ~ getNewDestinations ~ mStart + mLength > endOverlap:", mStart + mLength -1 > endOverlap)
+                if (startOverlap > sStart) {
+                    sources.push([sStart, startOverlap])
+                }
+                if (mStart + mLength -1 > endOverlap) {
+                    sources.push([endOverlap, sEnd])
+                }
+                break;
             }
-            cycles++
-        }
-    }
-    console.info("Number of Cycles: ", cycles);
-    console.info("SmallestNumber: ", currentSmallest);
+            newRanges.push([sStart, sEnd]);
+        };
+    };
+    console.log("🚀 ~ file: day5_2.js:58 ~ getNewDestinations ~ newRanges:", newRanges)
+
+    return sources;
 }
 
-function mapToObject(map) {
-    const onlyNumbers = map.split(":\r\n")[1];
-    return onlyNumbers.split("\r\n").map((item) => {
-        const ranges = item.match(/\d+/g);
-        return {
-            'destinationRangeStart': +ranges[0],
-            'sourceRangeStart': +ranges[1],
-            'rangeLength': +ranges[2]
-        }
-    });
-}
-
-function mapToSourceToDestination(mappedObject) {
-    return mappedObject.reduce((acc, current) => {
-        const element = {
-            "startIndexSource": current.sourceRangeStart,
-            "endIndexSource": current.sourceRangeStart + current.rangeLength-1,
-            "startIndexDestination": current.destinationRangeStart,
-            "endIndexDestination": current.destinationRangeStart + current.rangeLength-1};
-        acc.push(element);
-        return acc;
-    },[]);
-}
-
-function getSmallestNumber(maps, seed) {
-    const seedLocation = [];
-    seedLocation.push(seed);
-    maps.forEach((map, mapIndex) => {
-        toLocation(seedLocation, map, mapIndex);
-    });
-    return seedLocation.pop()
-}
-
-function toLocation(seedLocation, map, mapIndex) {
-    const copyOfLocation = [...seedLocation];
-    for (let i = 0; i < map.length; i++) {
-        const loc = map[i];
-        if (copyOfLocation[mapIndex] >= loc.startIndexSource && copyOfLocation[mapIndex] <= loc.endIndexSource) {
-            seedLocation.push(loc.startIndexDestination +  (copyOfLocation[mapIndex] - loc.startIndexSource));
-            continue;
-        }
-    }
-    if (!seedLocation[mapIndex+1]) seedLocation.push(copyOfLocation[mapIndex]);
-    return seedLocation;
-}
-
-function toRangPairs(seedRanges) {
-    const rangePairs = [];
-    for (let index = 0; index < seedRanges.length; index+=2) {
-        rangePairs.push(seedRanges.slice(index, index+2))
-    }
-    return rangePairs;
-}
-
-console.time('StartTimer')
+console.time('Total runtime');
 execute(test);
-console.timeEnd('StartTimer');
+console.timeEnd('Total runtime');

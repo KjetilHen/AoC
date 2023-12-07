@@ -105,79 +105,45 @@ const test = fs.readFileSync('data/day5/test_1.txt').toString();
 // const test_2 = fs.readFileSync('data/day4/test_2.txt');
 const input = fs.readFileSync('data/day5/input.txt').toString();
 
-function getSeedsAndMap(input) {
-    const toArray = input.trim().split('\r\n\r\n');
-    const seeds = getSeeds(toArray[0]);
-    const maps = [];
-    for (let i = 1; i < toArray.length; i++) {
-        const mappedToObject = mapToObject(toArray[i]);
-        maps.push(mapToSourceToDestination(mappedToObject));
-    }
-    return {
-        seeds,
-        maps
-    }
+function execute(input) {
+    const [ seeds, ...maps ] = input.trim().split('\r\n\r\n');
+    console.log(getLocation(maps.map(parseMapToNumbers), getSeeds(seeds)));
 }
 
 function getSeeds(seedsAsString) {
-    return seeds = seedsAsString.match(/\d+/g).map((string) => +string);
+    const seeds = seedsAsString.match(/\d+/g).map(Number);
+    seeds.sort();
+    return seeds;
 }
 
-function execute(input) {
-    const { seeds, maps}= getSeedsAndMap(input);
-    console.log("🚀 ~ file: day5_1.js:128 ~ execute ~ seeds, maps:", seeds, maps)
-    const destinationOfSeeds = [];
-    const destinations = getDestination(maps, seeds,  destinationOfSeeds);
+function parseMapToNumbers(map) {
+    const preparedMap = map.split("\r\n");
+    preparedMap.shift(); // remove title of map
+    const mappedToOnlyNumbers = preparedMap.map((item) => (item.match(/\d+/g).map(Number)));
+    mappedToOnlyNumbers.sort((a, b) => (a[1] - b[1]));
+    return mappedToOnlyNumbers;
 }
 
-function mapToObject(map) {
-    const onlyNumbers = map.split(":\r\n")[1];
-    return onlyNumbers.split("\r\n").map((item) => {
-        const ranges = item.match(/\d+/g);
-        return {
-            'destinationRangeStart': +ranges[0],
-            'sourceRangeStart': +ranges[1],
-            'rangeLength': +ranges[2]
-        }
-    });
-}
-
-function mapToSourceToDestination(mappedObject) {
-    return mappedObject.reduce((acc, current) => {
-        const element = {
-            "startIndexSource": current.sourceRangeStart,
-            "endIndexSource": current.sourceRangeStart + current.rangeLength-1,
-            "startIndexDestination": current.destinationRangeStart,
-            "endIndexDestination": current.destinationRangeStart + current.rangeLength-1};
-        acc.push(element);
-        return acc;
-    },[]);
-}
-
-function getDestination(maps, seeds, destinationOfSeeds) {
-    seeds.forEach((seed) => {
-        const seedLocation = [];
-        seedLocation.push(seed);
-        maps.forEach((map, mapIndex) => {
-            toLocation(seedLocation, map, mapIndex);
-        });
-        destinationOfSeeds.push(seedLocation);
-    });
-    return destinationOfSeeds;
-}
-
-function toLocation(seedLocation, map, mapIndex) {
-    const copyOfLocation = [...seedLocation];
-    for (let i = 0; i < map.length; i++) {
-        const loc = map[i];
-        if(copyOfLocation[mapIndex] >= loc.startIndexSource && copyOfLocation[mapIndex] <= loc.endIndexSource) {
-            const diff = loc.endIndexSource - copyOfLocation[mapIndex];
-            seedLocation.push(loc.endIndexDestination - diff);
-            continue;
-        }
+function getLocation(maps, seeds) {
+    for (const map of maps) {
+        seeds = getNewDestinations(map, seeds);
     }
-    if (!seedLocation[mapIndex+1]) seedLocation.push(copyOfLocation[mapIndex]);
-    return seedLocation;
+    return Math.min(...seeds);
 }
 
+function getNewDestinations(map, sources) {
+    const newDestinations = []
+    sources.forEach((seed) => {
+        const range = map.find(([,start, length]) => (seed >= start && seed <= start + length));
+        if (range) {
+            newDestinations.push(range[0] + seed - range[1]);
+        } else {
+            newDestinations.push(seed);
+        }
+    });
+    return newDestinations;
+}
+
+console.time('Total runtime');
 execute(input);
+console.timeEnd('Total runtime');
