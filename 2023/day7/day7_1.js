@@ -73,7 +73,7 @@ function execute(input) {
     handBids = handBids.map((object) => {
         object
         return {
-            handValueBasedOfType: getHandValue(object.hand),
+            strength: getHandValue(object.hand),
             ...object,
         }
     });

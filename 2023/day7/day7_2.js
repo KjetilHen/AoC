@@ -28,7 +28,7 @@ const fs = require('fs');
 const test = fs.readFileSync('data/day7/test_1.txt').toString();
 const input = fs.readFileSync('data/day7/input.txt').toString();
 
-const cardValues = {"A": 14, "K": 13, "Q": 12, "J": 2, "T": 10, "9": 9,"8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2};
+const cardValues = {"A": 14, "K": 13, "Q": 12, "J": 0, "T": 10, "9": 9,"8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2};
 
 function execute(input) {
     let handBids = input.split("\r\n").map((handBid) =>  {
@@ -40,18 +40,21 @@ function execute(input) {
     });
 
     handBids = handBids.map((object) => {
-        object
+        const [type, strength] = getHandValue(object.hand)
         return {
-            handValueBasedOfType: getHandValue(object.hand),
+            strength,
+            type,
             ...object,
         }
     });
     handBids.sort((a, b) => {
-        if (a.handValueBasedOfType > b.handValueBasedOfType) return 1;
-        if (a.handValueBasedOfType < b.handValueBasedOfType) return -1;
+        if (a.strength > b.strength) return 1;
+        if (a.strength < b.strength) return -1;
         return getHighestHandBasedOfCardValue(a, b);
     });
-    console.log(handBids);
+    handBids.forEach((hand) => {
+        console.log(hand);
+    })
     const totalWinnings = handBids.reduce((acc, current, index) => (acc += Number(current.bid) * (index + 1)), 0);
     console.log(totalWinnings);
 }
@@ -66,30 +69,29 @@ function getHandValue(hand) {
     }, {});
     const valueOfJ = valueAppearances['J'];
     const onlyAppearances = Object.values(valueAppearances);
-    // console.log("🚀 ~ file: day7_2.js:103 ~ valueAppearances ~ valueAppearances:", valueAppearances, !!valueOfJ)
     if(fiveOfKind(onlyAppearances, valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:125 ~ fiveOfKind");
-        return 6}
+        return ["FiveOfKind", 6]}
     else if(fourOfKind(onlyAppearances,valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:116 ~ fourOfKind");
-        return 5}
+        return ["FourOfKind", 5]}
     else if(fullHouse(onlyAppearances, valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:119 ~ fullHouse");
-        return 4}
+        return ["FullHouse", 4]}
     else if(threeOfKind(onlyAppearances, valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:124 ~ threeOfKind");
-        return 3}
+        return ["ThreeOfKind", 3]}
     else if(twoPair(onlyAppearances, valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:128 ~ twoPair");
-        return 2}
+        return ["Two Pair", 2]}
     else if(onePair(onlyAppearances, valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:132 ~ onePair");
-        return 1}
-    else if(highestCard) {
+        return ["One pair", 1]}
+    else if(highestCard(onlyAppearances, valueOfJ)) {
         // console.log("🚀 ~ file: day7_1.js:115 ~ highestCard");
-        return 0 }
+        return ["High card", 0] }
     else {
-        return -1}
+        return ["no strength", -1]}
 }
 
 function fiveOfKind(valueAppearances, valueOfJ) {
@@ -102,7 +104,7 @@ function fiveOfKind(valueAppearances, valueOfJ) {
 function fourOfKind(valueAppearances, valueOfJ) {
     return valueAppearances.includes(4) ||
     (valueOfJ === 1 && valueAppearances.includes(3)) ||
-    (valueOfJ === 2 && valueAppearances.includes(2)) ||
+    (valueOfJ === 2 && valueAppearances.filter(value => value === 2).length === 2) ||
     (valueOfJ === 3 && valueAppearances.includes(1));
 }
 function fullHouse(valueAppearances, valueOfJ) {
@@ -111,18 +113,19 @@ function fullHouse(valueAppearances, valueOfJ) {
 }
 function threeOfKind(valueAppearances, valueOfJ) {
     return !valueOfJ && valueAppearances.includes(3) ||
-    (valueOfJ === 1 && valueAppearances.includes(2));
+    (valueOfJ === 1 && valueAppearances.includes(2)) ||
+    (valueOfJ === 2 && valueAppearances.filter(value => value === 1).length === 3);
 }
 function twoPair(valueAppearances, valueOJ) {
     return !valueOJ && valueAppearances.filter(value => value === 2).length === 2;
 }
 function onePair(valueAppearances,valueOfJ) {
-    return !valueOfJ && valueAppearances.filter(value => value === 2).length === 2 ||
+    return !valueOfJ && valueAppearances.filter(value => value === 2).length === 1 ||
     (valueOfJ === 1 && valueAppearances.filter(value => value === 1).length === 5);
 }
 
 function highestCard(valueAppearances,valueOfJ) {
-    return !valueOfJ && valueAppearances.filter(value => value === 1).length === 4;
+    return !valueOfJ && valueAppearances.filter(value => value === 1).length === 5;
 }
 
 function xKind(hand, cardValue) {
