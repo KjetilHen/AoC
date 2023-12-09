@@ -59,7 +59,6 @@ function execute(input) {
     while(keyIndex < startingKeys.length) {
         steps++
         const key = startingKeys[keyIndex];
-        console.log("🚀 ~ file: day8_2.js:61 ~ execute ~ startingNodes:", steps, instructions[index], index, [key])
         startingKeys[keyIndex] = nodes.get(key)[instructions[index]];
         if (startingKeys[keyIndex].endsWith('Z')) {
             stepsPerKey.push(steps);
@@ -82,30 +81,12 @@ function toNodes(network) {
     }, new Map())
 }
 
-function lcm(stepsPerKey) {
-    return / gcd(stepsPerKey);
-
-}
-
-function gcd(stepsPerKey) {
-    return stepsPerKey.map(factoriseer)
-}
-function factoriseer(n) {
-    // stap 1
-    let deler = 2;
-    while (n % deler != 0) deler++;                  // kleinste deler van n opzoeken
-// stap 2
-    let k = 0;
-    while (n % deler == 0) {
-         n /= deler;                                 // nieuwe waarde van n
-         k++;                                        // bepalen na k maal delen
+function lcm(stepsPerKey, instructions) {
+    const product = stepsPerKey.reduce((acc, current) =>  acc * (current / instructions.length));
+    if (stepsPerKey.every((key) => isPrime(key / instructions.length))) {
+        return product
     }
-// stap 3
-    let s = "" + deler;                           // waarde van deler
-    if (k > 1) s += "^"+k;                           // en ^k aan de string toevoegen
-// stap 4
-    if (n > 1) s += " * " + factoriseer(n);          // voeg " * " en volgende stap aan string toe
-    return s;                                        // string met ontbinding terugsturen
+    return 'no effort'
 }
 
 function isPrime(number) {
