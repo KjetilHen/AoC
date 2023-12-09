@@ -41,29 +41,35 @@ const test3 = fs.readFileSync('data/day8/test_3.txt').toString();
 const input = fs.readFileSync('data/day8/input.txt').toString();
 
 function execute(input) {
-    const [instructionsString, ...network] = input.trim().split('\r\n');    
+    const [instructionsString, ...network] = input.trim().split('\r\n');
     const instructions = stringToArray(instructionsString);
+    console.log("🚀 ~ file: day8_2.js:46 ~ execute ~ instructions:", instructions.length);
     const nodes = toNodes(network);
 
-    let startingNodes = [];
+    let keyIndex = 0;
+    let startingKeys = [];
     for (const key of nodes.keys()) {
-        if (key.endsWith('A')) startingNodes.push(key);
+        if (key.endsWith('A')) startingKeys.push(key);
     }
+
     let steps = 0;
+    let stepsPerKey = [];
     let index = 0;
-    while (!startingNodes.every((node) => node.endsWith('Z'))) {
-        for (let i = 0; i < startingNodes.length; i++) {
-            if (startingNodes[i].endsWith('Z')) continue;
-            const key = startingNodes[i];
-            const instruction = instructions[index];
-            startingNodes[i] = nodes.get(key)[instruction];
-            index++;
-            if (index === instructions.length) index = 0
+    console.log("🚀 ~ file: day8_2.js:61 ~ execute ~ startValues:", steps, startingKeys);
+    while(keyIndex < startingKeys.length) {
+        steps++
+        const key = startingKeys[keyIndex];
+        console.log("🚀 ~ file: day8_2.js:61 ~ execute ~ startingNodes:", steps, instructions[index], index, [key])
+        startingKeys[keyIndex] = nodes.get(key)[instructions[index]];
+        if (startingKeys[keyIndex].endsWith('Z')) {
+            stepsPerKey.push(steps);
+            steps = 0;
+            keyIndex++;
         }
-        console.log(steps, startingNodes);
-        steps++;    
+        index++;
+        if (index === instructions.length) index = 0
     }
-    // console.log(steps, startingNodes);
+    console.log(stepsPerKey, lcm(stepsPerKey, instructions));
 }
 
 function toNodes(network) {
@@ -76,10 +82,58 @@ function toNodes(network) {
     }, new Map())
 }
 
+function lcm(stepsPerKey) {
+    return / gcd(stepsPerKey);
+
+}
+
+function gcd(stepsPerKey) {
+    return stepsPerKey.map(factoriseer)
+}
+function factoriseer(n) {
+    // stap 1
+    let deler = 2;
+    while (n % deler != 0) deler++;                  // kleinste deler van n opzoeken
+// stap 2
+    let k = 0;
+    while (n % deler == 0) {
+         n /= deler;                                 // nieuwe waarde van n
+         k++;                                        // bepalen na k maal delen
+    }
+// stap 3
+    let s = "" + deler;                           // waarde van deler
+    if (k > 1) s += "^"+k;                           // en ^k aan de string toevoegen
+// stap 4
+    if (n > 1) s += " * " + factoriseer(n);          // voeg " * " en volgende stap aan string toe
+    return s;                                        // string met ontbinding terugsturen
+}
+
+function isPrime(number) {
+    let isPrime = true;
+    for (let i = 2; i < number; i++) {
+        if (number % i == 0) {
+            isPrime = false;
+            break;
+        }
+    }
+    return isPrime;
+}
+
 function stringToArray(instructions) {
     return instructions.trim().split('');
 }
 
 console.time("Total runtime");
-execute(test3);
+execute(input);
 console.timeEnd("Total runtime");
+
+    // instructionLoop: while (!startingNodes.every((node) => node.endsWith('Z'))) {
+    //     steps++
+    //     for (let j = 0; j < startingNodes.length; j++) {
+    //         const key = startingNodes[0];
+    //         startingNodes[0] = nodes.get(key)[instructions[i]];
+    //     }
+    //     console.log("🚀 ~ file: day8_2.js:61 ~ execute ~ startingNodes:", steps, instructions[i], startingNodes)
+    // i++;
+    // if (i === instructions.length) i = 0
+    // }
