@@ -8,47 +8,61 @@ int size; // size of the pipe
 Pipe[][] ground;
 Pipe[] path;
 Pipe pipe;
+Pipe nextP;
 char[][] symbols;
 
-final int[] dx = {0, 1, 0, -1};
-final int[] dy = {-1, 0, 1, 0};
+final int[] north = {0, -1};
+final int[] east = {1, 0};
+final int[] south = {0, 1};
+final int[] west = {-1, 0};
+
+final int[][] directions = {north, east, south, west};
 
 int farthestPoint = 0;
 
 void setup() {
-  size(1000, 1000);
+  size(980, 980);
   background(255);
   frameRate(2);
   String[] test1 = loadStrings("../../data/day10/test_1.txt");
   String[] test3 = loadStrings("../../data/day10/test_3.txt");
   String[] input = loadStrings("../../data/day10/input.txt");
-  symbols = getSymbolsArray(input);
+  symbols = getSymbolsArray(test3);
   size = width / rows;
   drawGround(symbols);
-  println(startX, startY);
   pipe = ground[startX][startY];
 }
-
+int index = 0;
 void draw() {
-  for (int i = 0; i < dx.length; i++) {
-    for (int j = 0; j < dy.length; j++) {
-      println(startX + dx[i], startY + dy[j]);
-      Pipe nextP = ground[startX + dx[i]][startY + dy[j]];
-      if (pipe.isNeighbour(nextP)) {
-        pipe = nextP;
-        pipe.move(j, i, 2);
-      }
-
-      if (pipe.beginning(nextP)) {
-        noLoop();
-      }
+  //println("start: " + pipe.indexX, pipe.indexY);
+  //println(pipe.indexX + directions[index][0], pipe.indexY + directions[index][1], index);
+  if (pipe.isStart()) { //<>//
+    nextP = ground[pipe.indexX + directions[index][0]][pipe.indexY + directions[index][1]];
+  }
+  //println(nextP);
+  if (index < directions.length) {
+  for (int j = 0; j < directions.length; j++) {
+    //println(nextP);
+    if (nextP.isGround()) {
+      continue;
     }
+    if (pipe.isNeighbour(nextP)) {
+      pipe = nextP;
+      pipe.move(directions[j][0], directions[j][1], 2);
+    }
+    nextP = ground[pipe.indexX + directions[j][0]][pipe.indexY + directions[j][1]];
+    if (pipe.beginning(nextP)) {
+      index++;
+    }
+  }
+  } else {
+    noLoop();
   }
 }
 
 char[][] getSymbolsArray(String[] input) {
-  rows = input.length;
-  columns = input[0].toCharArray().length;
+  rows = input.length; // get number of rows
+  columns = input[0].toCharArray().length; // get number of columns
   char[][] symbols = new char[rows][columns];
   for (int i = 0; i < input.length; i++) {
     symbols[i] = input[i].toCharArray();
@@ -57,27 +71,23 @@ char[][] getSymbolsArray(String[] input) {
 }
 
 void drawGround(char[][] symbols) {
-  this.ground = new Pipe[rows][columns];
-  for (int i = 0; i < rows; i++) {
-    for (int j = 0; j < columns; j++) {
+  ground = new Pipe[rows][columns];
+  for (int j = 0; j < rows; j++) {
+    for (int i = 0; i < columns; i++) {
+      println(symbols[i][j], i, j);
       Pipe p = getPipe(symbols[i][j], i, j);
-      this.ground[i][j] = p;
+      ground[j][i] = p;
       if (p.isStart()) {
-        startX = i;
-        startY = j;
+        startX = j;
+        startY = i;
+        println("x, y: " + startX, startY);
+        stroke(255, 0, 0);
+        strokeWeight(2);
+        rect(startX * size, startY * size, size, size);
       }
 
       if (!p.isGround()) {
         p.drawPipe(j, i);
-      }
-
-      if (p.isStart()) {
-        stroke(255, 0, 0);
-        strokeWeight(2);
-        line(startX, startY, northX, northY);
-        line(startX, startY, eastX, eastY);
-        line(startX, startY, westX, westY);
-        line(startX, startY, southX, southY);
       }
     }
   }

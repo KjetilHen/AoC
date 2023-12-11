@@ -41,7 +41,7 @@ public class Pipe {
     int westX = tileWidth - size;
     int westY = tileHeight - size / 2;
     int southX = tileWidth - size / 2;
-    int southY = tileHeight; //<>//
+    int southY = tileHeight;
     int eastX = tileWidth;
     int eastY = tileHeight - size / 2;
     // North - South
