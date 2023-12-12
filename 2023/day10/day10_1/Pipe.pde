@@ -1,107 +1,112 @@
-public class Pipe {
- 
-  public boolean north;
-  public boolean west;
-  public boolean south;
-  public boolean east;
-  public boolean start = false;
-  public int indexX;
-  public int indexY;
+class Pipe { //<>//
+  char type;
+
+  // Neighbours
+  boolean north = false;
+  boolean south = false;
+  boolean east = false;
+  boolean west = false;
   
-  public Pipe(boolean north, boolean west, boolean south, boolean east, int indexX, int indexY) {
-     this.north = north;
-     this.west = west;
-     this.south = south;
-     this.east = east;
-     this.indexX = indexX;
-     this.indexY = indexY;
+  Pipe previous = null;
+
+  int x, y;
+  int startX, startY;
+
+  public Pipe(char type, int x, int y) {
+    this.type = type;
+    this.x = x;
+    this.y = y;
+    startX = x * size;
+    startY = y * size;
+    this.setNeighbours(type);
+  }
+
+  public void setNeighbours(char type) {
+    // order is north, west, south, east
+    switch(type) {
+    case '|':
+      this.north = true;
+      this.south = true;
+      break;
+    case '-':
+      this.west = true;
+      this.east = true;
+      break;
+    case 'L':
+      this.north = true;
+      this.east = true;
+      break;
+    case 'J':
+      this.north = true;
+      this.west = true;
+      break;
+    case '7':
+      this.south = true;
+      this.west = true;
+      break;
+    case 'F':
+      this.south = true;
+      this.east = true;
+      break;
+    case 'S':
+      this.north = true;
+      this.west = true;
+      this.south = true;
+      this.east = true;
+      break;
+    default:
+      break;
+    }
   }
   
-  public boolean isNeighbour(Pipe next) {
-     return (this.west && next.east)  || (this.east && next.west) || (this.north && next.south) || (this.south && next.north);
-  }
-  
-  public boolean beginning(Pipe p) {
-    return this.indexX == p.indexX && this.indexY == p.indexY;
-  }
-  
-  public void drawPipe(int x, int y) {
-    this.drawPipe(x, y, 1, color(30, 30, 30));
-  }
-  
-  public void drawPipe(int x, int y, int strokeWeight, color c) {
+  public void setStroke(color c,  float weight) {
     stroke(c);
-    strokeWeight(strokeWeight);
-    int tileHeight = (y + 1) * size;
-    int tileWidth = (x + 1) * size;
-    int startX = tileWidth - (size / 2);
-    int startY = tileHeight - (size / 2);
-    int northX = tileWidth - size / 2;
-    int northY = tileHeight - size;
-    int westX = tileWidth - size;
-    int westY = tileHeight - size / 2;
-    int southX = tileWidth - size / 2;
-    int southY = tileHeight;
-    int eastX = tileWidth;
-    int eastY = tileHeight - size / 2;
-    // North - South
-    if (this.hasNorth() && !this.hasWest() && this.hasSouth() && !this.hasEast()) {
-      line(startX, startY, northX, northY);
-      line(startX, startY, southX, southY);
+    strokeWeight(weight);
+  }
+
+  public void drawPipe() {
+    if (this.isStart()) {
+      this.setStroke(color(255, 0, 0), 1.5);
     }
-    // North - West
-    if (this.hasNorth() && this.hasWest() && !this.hasSouth() && !this.hasEast()) {
-      line(startX, startY, northX, northY);
-      line(startX, startY, westX, westY);
+    if (this.north) {
+      int northX = startX + size / 2;
+      int northY = startY;
+      drawLine(northX, northY);
     }
-    // North - East
-    if (this.hasNorth() && !this.hasWest() && !this.hasSouth() && this.hasEast()) {
-      line(startX, startY, northX, northY);
-      line(startX, startY, eastX, eastY);
+    if (this.south) {
+      int southX = startX + size / 2;
+      int southY = startY + size;
+      drawLine(southX, southY);
     }
-    // East - West
-    if (!this.hasNorth() && this.hasWest() && !this.hasSouth() && this.hasEast()) {
-      line(startX, startY, westX, westY);
-      line(startX, startY, eastX, eastY);
+    if (this.west) {
+      int westX = startX;
+      int westY = startY + size / 2;
+      drawLine(westX, westY);
     }
-    // East - South
-    if (!this.hasNorth() && !this.hasWest() && this.hasSouth() && this.hasEast()) {
-      line(startX, startY, eastX, eastY);
-      line(startX, startY, southX, southY);
-    }
-    // West - South
-    if (!this.hasNorth() && this.hasWest() && this.hasSouth() && !this.hasEast()) {
-      line(startX, startY, westX, westY);
-      line(startX, startY, southX, southY);
+    if (this.east) {
+      int eastX = startX + size;
+      int eastY = startY + size / 2;
+      drawLine(eastX, eastY);
     }
   }
   
-  public void move(int x, int y, int strokeWeight) {
-    color c = color(0, 255, 0);
-    this.drawPipe(x, y, strokeWeight, c);
+  public boolean isConnectingNeighbour(Pipe next) {
+    return (this.north && next.south || this.south && next.north) || (this.west && next.east && this.east && next.west);  //<>//
   }
   
-  public boolean hasNorth() {
-    return this.north;
+  public void setPrevious() {
+    this.previous = this;
   }
-  
-  public boolean hasWest() {
-    return this.west;
+
+  public void drawLine(int endX, int endY) {
+    line(startX + size / 2, startY + size / 2, endX, endY);
   }
-  
-  public boolean hasSouth() {
-    return this.south;
-  }
-  
-  public boolean hasEast() {
-    return this.east;
-  }
-  
+
   public boolean isStart() {
-    return this.north && this.west && this.south && this.east;
+    return this.type == 'S';
   }
-  
+
   public boolean isGround() {
-    return !this.north && !this.west && !this.south && !this.east;
+    return this.type == '.';
   }
 }
