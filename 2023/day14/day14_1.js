@@ -67,14 +67,21 @@ const input = fs.readFileSync('data/day14/input.txt').toString();
 
 function execute(input) {
     let matrix = toMatrix(input);
-    console.table(matrix);
-    // matrix = 
-    moveRoundedRockToNorth([...matrix]);
+    matrix = moveLoad([...matrix]);
+    console.log(calculateLoad(matrix));
 }
 
-execute(test2);
+execute(input);
 
-function moveToNorth(matrix) {
+function calculateLoad(matrix) {
+    return matrix.reduce((acc, current, index, array) => {
+        const numberOfRoundedRocks = current.filter((rock) => rock === "O").length;
+        acc += numberOfRoundedRocks * (array.length - index);
+        return acc;
+    }, 0)
+}
+
+function moveLoad(matrix) {
     for (let y = 1; y < matrix.length; y++) {
         for (let x = 0; x < matrix[y].length; x++) {
             if (matrix[y][x] === "." || matrix[y][x] === "#") continue;
@@ -82,7 +89,7 @@ function moveToNorth(matrix) {
             let prevPos = y - 1;
             let currentRockPos = y;
             while (prevPos > -1) {
-                if (matrix[prevPos][x] === "#") break;
+                if (matrix[prevPos][x] === "#" || matrix[prevPos][x] ===  "O") break;
                 matrix[prevPos][x] = matrix[prevPos][x].replace(/\./g, "O");
                 matrix[currentRockPos][x] = matrix[currentRockPos][x].replace(/O/g, ".");
                 prevPos--;
@@ -90,11 +97,9 @@ function moveToNorth(matrix) {
             }
         }
     }
-    console.table(matrix);
+    return matrix;
 }
 
 function toMatrix(input) {
-    return input.split("\n").map(row => row.split(""));
+    return input.split("\r\n").map(row => row.split(""));
 }
-
-moveToNorth(twoDArray);
